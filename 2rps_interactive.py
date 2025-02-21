@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.widgets import Slider
 
 def rotation_matrix(theta):
     """Returns the 2D rotation matrix for a given angle theta."""
@@ -35,34 +36,38 @@ def inverse_kinematics(theta_p, l=2, extension=1):
     
     return [tuple(base1), tuple(b1), tuple(b2), tuple(base2), tuple(b1_ext), tuple(b2_ext)]
 
-def plot_manipulator(theta_p_deg):
-    """Update plot based on user input angle."""
+
+def update_plot(val):
+    """Update plot based on slider value."""
+    theta_p_deg = theta_slider.val  # Get value from slider
     theta_p = np.radians(theta_p_deg)
     joint_positions = inverse_kinematics(theta_p)
     
     x_vals, y_vals = zip(*joint_positions)
     
-    plt.clf()  # Clear the figure
-    plt.plot([x_vals[0], x_vals[1]], [y_vals[0], y_vals[1]], '-o', markersize=8, linewidth=3, label='Base to S1')
-    plt.plot([x_vals[3], x_vals[2]], [y_vals[3], y_vals[2]], '-o', markersize=8, linewidth=3, label='Base to S2')
-    plt.plot([x_vals[1], x_vals[2]], [y_vals[1], y_vals[2]], '-o', markersize=8, linewidth=3, label='Platform')
-    plt.plot([x_vals[4], x_vals[5]], [y_vals[4], y_vals[5]], '--', linewidth=2, label='Extended Platform')
+    ax.clear()
+    ax.plot([x_vals[0], x_vals[1]], [y_vals[0], y_vals[1]], '-o', markersize=8, linewidth=3, label='Base to S1')
+    ax.plot([x_vals[3], x_vals[2]], [y_vals[3], y_vals[2]], '-o', markersize=8, linewidth=3, label='Base to S2')
+    ax.plot([x_vals[1], x_vals[2]], [y_vals[1], y_vals[2]], '-o', markersize=8, linewidth=3, label='Platform')
+    ax.plot([x_vals[4], x_vals[5]], [y_vals[4], y_vals[5]], '--', linewidth=2, label='Extended Platform')
 
-    plt.xlim(-3, 9)
-    plt.ylim(-2, 4)
-    plt.grid(True)
-    plt.title(f"2-RPS Parallel Manipulator (θ = {theta_p_deg}°)")
-    plt.legend()
+    ax.set_xlim(-3, 9)
+    ax.set_ylim(-2, 4)
+    ax.grid(True)
+    ax.set_title(f"2-RPS Parallel Manipulator (θ = {theta_p_deg:.1f}°)")
+    ax.legend()
     plt.draw()
-    plt.pause(0.1)  # Pause to update plot
 
-# Run continuously and take user input
-plt.ion()  # Enable interactive mode
+# Create plot
+fig, ax = plt.subplots()
+plt.subplots_adjust(left=0.1, bottom=0.25)  # Space for the slider
 
-theta_p_deg = 0  # Initial angle
-while True:
-    plot_manipulator(theta_p_deg)
-    try:
-        theta_p_deg = float(input("Enter the platform rotation angle (-90 to 90 degrees): "))
-    except ValueError:
-        print("Invalid input! Please enter a number.")
+# Add slider
+ax_theta = plt.axes([0.1, 0.1, 0.8, 0.03])  # Position of the slider
+theta_slider = Slider(ax_theta, 'Theta', -90, 90, valinit=0)
+
+# Initial plot setup
+theta_slider.on_changed(update_plot)  # Call update function on change
+
+update_plot(None)
+plt.show()
